@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+  xsi:type="TaskPaneApp">
+  <Id>8f3a2c1e-6b47-4d9a-9e21-71c0b8d4a5f2</Id>
+  <Version>1.0.0.1</Version>
+  <ProviderName>Mannasoft</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="Liquid4All" />
+  <Description DefaultValue="Cash-flow planning stored in the Excel workbook. No server required." />
+  <IconUrl DefaultValue="https://wolfgangmenabruhn.github.io/liquid4all-host/assets/icon-32.png" />
+  <HighResolutionIconUrl DefaultValue="https://wolfgangmenabruhn.github.io/liquid4all-host/assets/icon-80.png" />
+  <SupportUrl DefaultValue="https://wolfgangmenabruhn.github.io/liquid4all-host/support.html" />
+  <AppDomains>
+    <AppDomain>https://wolfgangmenabruhn.github.io</AppDomain>
+  </AppDomains>
+  <Hosts>
+    <Host Name="Workbook" />
+  </Hosts>
+  <Requirements>
+    <Sets DefaultMinVersion="1.1">
+      <Set Name="ExcelApi" MinVersion="1.9" />
+    </Sets>
+  </Requirements>
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://wolfgangmenabruhn.github.io/liquid4all-host/" />
+  </DefaultSettings>
+  <Permissions>ReadWriteDocument</Permissions>
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Workbook">
+        <DesktopFormFactor>
+          <GetStarted>
+            <Title resid="GetStarted.Title" />
+            <Description resid="GetStarted.Description" />
+            <LearnMoreUrl resid="GetStarted.LearnMoreUrl" />
+          </GetStarted>
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <OfficeTab id="TabHome">
+              <Group id="Liquid4All.Group">
+                <Label resid="Group.Label" />
+                <Icon>
+                  <bt:Image size="16" resid="Icon.16" />
+                  <bt:Image size="32" resid="Icon.32" />
+                  <bt:Image size="80" resid="Icon.80" />
+                </Icon>
+                <Control xsi:type="Button" id="Liquid4All.TaskpaneButton">
+                  <Label resid="TaskpaneButton.Label" />
+                  <Supertip>
+                    <Title resid="TaskpaneButton.Label" />
+                    <Description resid="TaskpaneButton.Tooltip" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16" />
+                    <bt:Image size="32" resid="Icon.32" />
+                    <bt:Image size="80" resid="Icon.80" />
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>Liquid4AllTaskpane</TaskpaneId>
+                    <SourceLocation resid="Taskpane.Url" />
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Icon.16" DefaultValue="https://wolfgangmenabruhn.github.io/liquid4all-host/assets/icon-16.png" />
+        <bt:Image id="Icon.32" DefaultValue="https://wolfgangmenabruhn.github.io/liquid4all-host/assets/icon-32.png" />
+        <bt:Image id="Icon.80" DefaultValue="https://wolfgangmenabruhn.github.io/liquid4all-host/assets/icon-80.png" />
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://wolfgangmenabruhn.github.io/liquid4all-host/" />
+        <bt:Url id="Taskpane.Url" DefaultValue="https://wolfgangmenabruhn.github.io/liquid4all-host/" />
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="GetStarted.Title" DefaultValue="Get started with Liquid4All" />
+        <bt:String id="Group.Label" DefaultValue="Liquid4All" />
+        <bt:String id="TaskpaneButton.Label" DefaultValue="Liquid4All" />
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="GetStarted.Description" DefaultValue="Open the task pane to manage accounts, VAT, planned transactions, and cash-flow." />
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Open the Liquid4All task pane" />
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>

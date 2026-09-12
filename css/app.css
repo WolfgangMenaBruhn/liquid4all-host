@@ -1,0 +1,426 @@
+:root {
+    color-scheme: light;
+    --ink: #1b2838;
+    --muted: #5c6b7a;
+    --line: #d9e1e8;
+    --accent: #1b6ec2;
+    --accent-ink: #fff;
+    --danger: #b32121;
+    --surface: #f6f8fa;
+    --selected: #e8f1fb;
+    font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+html, body, #app {
+    margin: 0;
+    height: 100%;
+    background: #fff;
+    color: var(--ink);
+}
+
+#blazor-error-ui {
+    color-scheme: light only;
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+.loading-progress {
+    position: absolute;
+    display: block;
+    width: 8rem;
+    height: 8rem;
+    inset: 20vh 0 auto 0;
+    margin: 0 auto;
+}
+
+.loading-progress circle {
+    fill: none;
+    stroke: #e0e0e0;
+    stroke-width: 0.6rem;
+    transform-origin: 50% 50%;
+    transform: rotate(-90deg);
+}
+
+.loading-progress circle:last-child {
+    stroke: var(--accent);
+    stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
+    transition: stroke-dasharray 0.05s ease-in-out;
+}
+
+.loading-progress-text {
+    position: absolute;
+    text-align: center;
+    font-weight: bold;
+    inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
+}
+
+.loading-progress-text:after {
+    content: var(--blazor-load-percentage-text, "Loading");
+}
+
+.app-shell {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.app-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+}
+
+.app-header nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.85rem;
+}
+
+.app-header a,
+.app-header .nav-link {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.92rem;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.app-header a.active,
+.app-header .nav-link.active {
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.app-main {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 1rem;
+}
+
+h1 {
+    font-size: 1.25rem;
+    margin: 0 0 0.75rem;
+    text-align: center;
+}
+
+h2 {
+    font-size: 1.05rem;
+    margin: 1.25rem 0 0.5rem;
+    text-align: center;
+}
+
+.form-grid {
+    display: grid;
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+}
+
+.form-row-grid {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr) max-content minmax(0, 1fr);
+    gap: 0.4rem 0.55rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.form-row-grid > label {
+    display: block;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.form-row-grid > select,
+.form-row-grid > input,
+.form-row-grid > textarea,
+.form-row-grid > .checklist {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.form-row-grid > .span-3 {
+    grid-column: span 3;
+}
+
+.form-row-grid > .span-2 {
+    grid-column: span 2;
+}
+
+.form-row-grid > textarea {
+    align-self: start;
+}
+
+.form-row-grid > label:has(+ textarea) {
+    align-self: start;
+    padding-top: 0.4rem;
+}
+
+.form-row-grid.filter-grid {
+    align-items: start;
+}
+
+.form-row-grid.filter-grid > label {
+    padding-top: 0.4rem;
+}
+
+.form-row-grid.filter-grid > label.filter-label-stacked {
+    white-space: pre-line;
+    line-height: 1.15;
+}
+
+.form-row-grid.filter-grid > input {
+    justify-self: stretch;
+    width: 100%;
+}
+
+.form-row-grid.filter-grid > .checklist {
+    min-height: 4.5rem;
+}
+
+.form-row-grid.filter-grid > .checklist .checkbox {
+    min-width: 0;
+}
+
+label {
+    display: grid;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+}
+
+input, select, textarea, button {
+    font: inherit;
+}
+
+input, select, textarea {
+    padding: 0.4rem 0.5rem;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+}
+
+textarea {
+    min-height: 3.5rem;
+    resize: vertical;
+}
+
+.checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+button {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: 0;
+    border-radius: 4px;
+    padding: 0.45rem 0.8rem;
+    cursor: pointer;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.entity-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.entity-list li {
+    display: grid;
+    gap: 0.15rem;
+    padding: 0.55rem 0.65rem;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+}
+
+.entity-list li.selected {
+    background: var(--selected);
+}
+
+.entity-list span {
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.error {
+    color: var(--danger);
+}
+
+.status, .hint {
+    color: var(--muted);
+}
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.panel {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-bottom: 0.85rem;
+    background: var(--surface);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    margin-bottom: 1rem;
+}
+
+.data-table th, .data-table td {
+    border-bottom: 1px solid var(--line);
+    padding: 0.35rem 0.4rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+.data-table tr.selected {
+    background: var(--selected);
+}
+
+.data-table tr {
+    cursor: pointer;
+}
+
+.checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    max-height: 8rem;
+    overflow: auto;
+    padding: 0.25rem;
+    border: 1px solid var(--line);
+    background: #fff;
+}
+
+.help-layout {
+    display: grid;
+    gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+    .help-layout {
+        grid-template-columns: 11rem 1fr;
+    }
+}
+
+.help-body, .notes {
+    white-space: pre-wrap;
+}
+
+button.inline-link {
+    display: inline;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.notes {
+    width: 100%;
+    min-height: 6rem;
+}
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(27, 40, 56, 0.45);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow: auto;
+    padding: 0.75rem;
+    box-sizing: border-box;
+}
+
+.overlay-dialog {
+    background: #fff;
+    border-radius: 6px;
+    padding: 0.85rem;
+    width: min(40rem, 100%);
+    margin: 0;
+    max-height: calc(100% - 1.5rem);
+    overflow: auto;
+}
+
+button.secondary {
+    background: #fff;
+    color: var(--ink);
+    border: 1px solid var(--line);
+}
+
+.confirm-dialog {
+    width: min(22rem, 100%);
+}
+
+.overlay-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.overlay-header h1 {
+    margin: 0;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.25rem 0.75rem;
+    margin: 0 0 1rem;
+}
+
+.detail-grid dt {
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.detail-grid dd {
+    margin: 0;
+    font-size: 0.85rem;
+}
