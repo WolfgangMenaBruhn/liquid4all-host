@@ -310,9 +310,10 @@ window.excelInterop = {
         });
     },
 
-    async exportCalculation(sheetName, headers, rows, chartOptions) {
+    async exportCalculation(sheetName, headers, rows, chartOptions, chartRows) {
         const pivotStartColumn = 26;
         const pivotName = "L4A_Pivot_" + Date.now();
+        const chartSource = this._chartSourceValues(headers, rows, chartRows);
 
         await Excel.run(async (context) => {
             const existing = context.workbook.worksheets.getItemOrNullObject(sheetName);
@@ -348,11 +349,24 @@ window.excelInterop = {
             sheet.getRangeByIndexes(1, 0, rows.length, 1).numberFormat = chartOptions?.dateFormat || "yyyy-mm-dd";
             sheet.getRangeByIndexes(1, 4, rows.length, 2).numberFormat = "0.00;[Red]-0.00";
             range.format.autofitColumns();
+
+            const chartColumnCount = chartSource[0].length;
+            const chartRange = sheet.getRangeByIndexes(
+                0,
+                pivotStartColumn,
+                chartSource.length,
+                chartColumnCount);
+            chartRange.values = chartSource;
+            sheet.getRangeByIndexes(1, pivotStartColumn, Math.max(chartSource.length - 1, 1), 1)
+                .numberFormat = chartOptions?.dateFormat || "yyyy-mm-dd";
+            sheet.getRangeByIndexes(1, pivotStartColumn + 2, Math.max(chartSource.length - 1, 1), 1)
+                .numberFormat = "0.00;[Red]-0.00";
+
             sheet.activate();
             await context.sync();
 
-            const destination = sheet.getRangeByIndexes(0, pivotStartColumn, 1, 1);
-            sheet.pivotTables.add(pivotName, range, destination);
+            const destination = sheet.getRangeByIndexes(0, pivotStartColumn + chartColumnCount + 1, 1, 1);
+            sheet.pivotTables.add(pivotName, chartRange, destination);
             await context.sync();
         });
 
@@ -403,6 +417,32 @@ window.excelInterop = {
         const day = Number(match[3]);
         const utc = Date.UTC(year, month - 1, day);
         return (utc - Date.UTC(1899, 11, 30)) / 86400000;
+    },
+
+    _chartSourceValues(headers, rows, chartRows) {
+        const header = [headers[0], headers[1], headers[5]];
+        const sourceRows = Array.isArray(chartRows) && chartRows.length > 0
+            ? chartRows.map((row) => [
+                this._toExcelSerialDate(row[0]),
+                row[1],
+                Number(row[2])
+            ])
+            : this._lastBalanceRows(rows);
+
+        return [header, ...sourceRows];
+    },
+
+    _lastBalanceRows(rows) {
+        const last = new Map();
+        for (const row of rows) {
+            last.set(String(row[0]) + "\0" + String(row[1]), [
+                this._toExcelSerialDate(row[0]),
+                row[1],
+                Number(row[5])
+            ]);
+        }
+
+        return [...last.values()];
     },
 
     async _addCalculationPivotChart(sheetName, pivotName, pivotStartColumn) {
