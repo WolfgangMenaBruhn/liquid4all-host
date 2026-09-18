@@ -30,9 +30,15 @@ window.excelInterop = {
             return;
         }
 
-        const script = document.createElement("script");
-        script.src = "https://appsforoffice.microsoft.com/lib/1/hosted/office.js";
-        script.onload = () => {
+        const officeBase = "https://appsforoffice.microsoft.com/lib/1/hosted/";
+        const locale = this.getHostLocale();
+        const afterOfficeJs = () => {
+            try {
+                Office.initialize = Office.initialize || function () { };
+            } catch {
+                // Office may still be constructing its namespace.
+            }
+
             Office.onReady((info) => {
                 this.host = info.host ? String(info.host) : null;
                 this.isReady = true;
@@ -40,12 +46,26 @@ window.excelInterop = {
                 this._startBlazorIfPending();
             });
         };
-        script.onerror = () => {
-            this.isReady = false;
-            this.host = null;
-            this._startBlazorIfPending();
-        };
-        document.head.appendChild(script);
+
+        const loadOfficeJs = () => this._loadScript(officeBase + "office.js")
+            .then(afterOfficeJs)
+            .catch(() => {
+                this.isReady = false;
+                this.host = null;
+                this._startBlazorIfPending();
+            });
+
+        // English strings are bundled in office.js. Other Excel UI languages fetch
+        // {locale}/office_strings.js first; if that file is missing, onReady never
+        // fires and Excel shows the "check your network" add-in error.
+        if (locale && locale !== "en-us") {
+            this._loadScript(officeBase + locale + "/office_strings.js")
+                .catch(() => {})
+                .then(loadOfficeJs);
+            return;
+        }
+
+        loadOfficeJs();
     },
 
     startBlazor() {
@@ -55,7 +75,13 @@ window.excelInterop = {
             }
 
             this._blazorStarted = true;
-            Blazor.start();
+            // Excel's WebView reports the Office display language as navigator.language.
+            // Starting Blazor in that culture downloads _framework/de/*.wasm before the
+            // app can render. A failed or slow satellite fetch looks like a network error
+            // in Excel. Boot in English, then load German resources after startup.
+            Promise.resolve(Blazor.start({ applicationCulture: "en-US" })).catch((error) => {
+                console.error("Liquid4All: Blazor.start failed", error);
+            });
         };
 
         if (this.skipped || this.isReady) {
@@ -75,6 +101,31 @@ window.excelInterop = {
         }
     },
 
+    getHostLocale() {
+        try {
+            const query = new URLSearchParams(window.location.search);
+            let hostInfo = query.get("_host_Info") || query.get("_host_info") || "";
+            if (!hostInfo) {
+                hostInfo = window.sessionStorage.getItem("hostInfoValue") || "";
+            }
+
+            hostInfo = decodeURIComponent(hostInfo);
+            const parts = hostInfo.includes("$") ? hostInfo.split("$") : hostInfo.split("|");
+            const locale = String(parts[3] || "").toLowerCase();
+            if (!locale) {
+                return "";
+            }
+
+            if (locale.startsWith("de")) {
+                return "de-de";
+            }
+
+            return locale;
+        } catch {
+            return "";
+        }
+    },
+
     getDisplayLanguage() {
         try {
             if (typeof Office !== "undefined" && Office.context && Office.context.displayLanguage) {
@@ -88,13 +139,47 @@ window.excelInterop = {
     },
 
     getExcelCulture() {
-        return this.getDisplayLanguage().toLowerCase().startsWith("de") ? "de" : "en";
+        const language = (this.getDisplayLanguage() || this.getHostLocale()).toLowerCase();
+        return language.startsWith("de") ? "de" : "en";
     },
 
     applyExcelCulture() {
         const culture = this.getExcelCulture();
         document.documentElement.lang = culture;
         return culture;
+    },
+
+    async loadSatelliteCultures(cultures) {
+        const list = Array.isArray(cultures) ? cultures : [cultures];
+        const loaders = [
+            globalThis.INTERNAL,
+            typeof Blazor !== "undefined" ? Blazor.runtime && Blazor.runtime.INTERNAL : null,
+            typeof Blazor !== "undefined" ? Blazor._internal : null
+        ];
+
+        for (const api of loaders) {
+            if (api && typeof api.loadSatelliteAssemblies === "function") {
+                try {
+                    await api.loadSatelliteAssemblies(list);
+                    return true;
+                } catch (error) {
+                    console.warn("Liquid4All: satellite assembly load failed", error);
+                }
+            }
+        }
+
+        return false;
+    },
+
+    _loadScript(src) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = src;
+            script.async = false;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error("Failed to load " + src));
+            document.head.appendChild(script);
+        });
     },
 
     applyTaskPaneWidth() {
