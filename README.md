@@ -2,7 +2,7 @@
 
 Published static files for the **Liquid4All** Excel Office.js add-in (Blazor WebAssembly).
 
-This repository is the free HTTPS host for GitHub Pages. Application source stays in the private repo `Liquid4All-AppSource`.
+This repository is the free HTTPS host for GitHub Pages. Application source stays in the private repo `Liquid4All-AppSource` (`C:\Daten\Projects\WMB\Mitosoft.Liquid4All`). This folder is **not** a project in `Mitosoft.Liquid4All.slnx`: it is its own git repo with no `.csproj`, only published static files.
 
 | What | URL |
 |------|-----|
@@ -30,6 +30,21 @@ Folders on this machine:
 | Host clone (this repo) | `C:\Daten\Projects\WMB\liquid4all-host` |
 
 Host origin: `https://wolfgangmenabruhn.github.io/liquid4all-host/`
+
+### Preferred: `Liquid4All.HostPublish`
+
+In the source solution, run the **HostPublish** project (Visual Studio: set startup to `Liquid4All.HostPublish` and Start — not the Excel multi-startup profile), or:
+
+```powershell
+cd C:\Daten\Projects\WMB\Mitosoft.Liquid4All
+dotnet run --project Liquid4All.HostPublish\Liquid4All.HostPublish.csproj
+```
+
+That publishes Release, replaces generated files in this clone, keeps `.nojekyll` / `404.html` / `support.html` / `README.md`, patches `index.html`, and rewrites `manifest.xml`. It does **not** `git commit` or `git push`. Then continue at [Commit and push](#6-commit-and-push-this-repo).
+
+If this clone is not at `..\liquid4all-host`, pass `--host-dir <path>` or set `LIQUID4ALL_HOST_DIR`.
+
+The numbered steps below are the same work, done by hand.
 
 ### 1. Finish the change in source
 
