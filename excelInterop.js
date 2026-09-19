@@ -30,8 +30,15 @@ window.excelInterop = {
             return;
         }
 
+        // Excel aborts the task pane if Office.initialize is still missing when
+        // the host script is ready. Set it before the CDN load so a language
+        // switch (stale _host_Info, extra office_strings.js) cannot miss that window.
+        window.Office = window.Office || {};
+        if (typeof window.Office.initialize !== "function") {
+            window.Office.initialize = function () { };
+        }
+
         const officeBase = "https://appsforoffice.microsoft.com/lib/1/hosted/";
-        const locale = this.getHostLocale();
         const afterOfficeJs = () => {
             try {
                 Office.initialize = Office.initialize || function () { };
@@ -55,17 +62,15 @@ window.excelInterop = {
                 this._startBlazorIfPending();
             });
 
-        // English strings are bundled in office.js. Other Excel UI languages fetch
-        // {locale}/office_strings.js first; if that file is missing, onReady never
-        // fires and Excel shows the "check your network" add-in error.
-        if (locale && locale !== "en-us") {
-            this._loadScript(officeBase + locale + "/office_strings.js")
-                .catch(() => {})
-                .then(loadOfficeJs);
-            return;
-        }
-
-        loadOfficeJs();
+        // office.js always fetches {locale}/office_strings.js — including en-us.
+        // After an Excel UI language change the cached _host_Info can still name
+        // the previous locale. Preloading only that locale 404s or races and Excel
+        // shows the "check your network" banner. English strings are the same
+        // fallback office.js uses; define them first, then let office.js overlay
+        // the real UI language if that file is available.
+        this._loadScript(officeBase + "en-us/office_strings.js")
+            .catch(() => {})
+            .then(loadOfficeJs);
     },
 
     startBlazor() {
@@ -76,10 +81,10 @@ window.excelInterop = {
 
             this._blazorStarted = true;
             // Excel's WebView reports the Office display language as navigator.language.
-            // Starting Blazor in that culture downloads _framework/de/*.wasm before the
-            // app can render. A failed or slow satellite fetch looks like a network error
-            // in Excel. Boot in English, then load German resources after startup.
-            Promise.resolve(Blazor.start({ applicationCulture: "en-US" })).catch((error) => {
+            // Starting Blazor in that culture downloads _framework/{locale}/*.wasm before
+            // the app can render. A failed or slow satellite fetch looks like a network
+            // error in Excel. Boot in English, then load the UI language after startup.
+            Promise.resolve(Blazor.start({ applicationCulture: "en" })).catch((error) => {
                 console.error("Liquid4All: Blazor.start failed", error);
             });
         };
@@ -103,24 +108,42 @@ window.excelInterop = {
 
     getHostLocale() {
         try {
+            const hostInfo = this._readHostInfo();
+            if (!hostInfo) {
+                return "";
+            }
+
+            const parts = hostInfo.includes("$") ? hostInfo.split("$") : hostInfo.split("|");
+            return String(parts[3] || "").toLowerCase();
+        } catch {
+            return "";
+        }
+    },
+
+    _readHostInfo() {
+        try {
+            if (typeof window.external !== "undefined" && typeof window.external.GetHostInfo === "function") {
+                const raw = String(window.external.GetHostInfo() || "");
+                if (raw && raw.toLowerCase() !== "isdialog") {
+                    const split = raw.split("_host_Info=");
+                    const value = split.length > 1 ? split[1] : raw;
+                    if (value) {
+                        return decodeURIComponent(value);
+                    }
+                }
+            }
+        } catch {
+            // Desktop WebView often does not expose GetHostInfo.
+        }
+
+        try {
             const query = new URLSearchParams(window.location.search);
             let hostInfo = query.get("_host_Info") || query.get("_host_info") || "";
             if (!hostInfo) {
                 hostInfo = window.sessionStorage.getItem("hostInfoValue") || "";
             }
 
-            hostInfo = decodeURIComponent(hostInfo);
-            const parts = hostInfo.includes("$") ? hostInfo.split("$") : hostInfo.split("|");
-            const locale = String(parts[3] || "").toLowerCase();
-            if (!locale) {
-                return "";
-            }
-
-            if (locale.startsWith("de")) {
-                return "de-de";
-            }
-
-            return locale;
+            return hostInfo ? decodeURIComponent(hostInfo) : "";
         } catch {
             return "";
         }
@@ -139,8 +162,12 @@ window.excelInterop = {
     },
 
     getExcelCulture() {
-        const language = (this.getDisplayLanguage() || this.getHostLocale()).toLowerCase();
-        return language.startsWith("de") ? "de" : "en";
+        const language = (this.getDisplayLanguage() || this.getHostLocale() || "en")
+            .toLowerCase()
+            .replace(/_/g, "-")
+            .split(",")[0]
+            .trim();
+        return language || "en";
     },
 
     applyExcelCulture() {
@@ -150,7 +177,13 @@ window.excelInterop = {
     },
 
     async loadSatelliteCultures(cultures) {
-        const list = Array.isArray(cultures) ? cultures : [cultures];
+        const list = (Array.isArray(cultures) ? cultures : [cultures])
+            .map((culture) => String(culture || "").trim())
+            .filter((culture) => culture && !culture.toLowerCase().startsWith("en"));
+        if (list.length === 0) {
+            return false;
+        }
+
         const loaders = [
             globalThis.INTERNAL,
             typeof Blazor !== "undefined" ? Blazor.runtime && Blazor.runtime.INTERNAL : null,
@@ -159,12 +192,17 @@ window.excelInterop = {
 
         for (const api of loaders) {
             if (api && typeof api.loadSatelliteAssemblies === "function") {
-                try {
-                    await api.loadSatelliteAssemblies(list);
-                    return true;
-                } catch (error) {
-                    console.warn("Liquid4All: satellite assembly load failed", error);
+                let loaded = false;
+                for (const culture of list) {
+                    try {
+                        await api.loadSatelliteAssemblies([culture]);
+                        loaded = true;
+                    } catch (error) {
+                        console.warn("Liquid4All: satellite assembly load failed", culture, error);
+                    }
                 }
+
+                return loaded;
             }
         }
 
