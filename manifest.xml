@@ -6,7 +6,7 @@
   xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
   xsi:type="TaskPaneApp">
   <Id>8f3a2c1e-6b47-4d9a-9e21-71c0b8d4a5f2</Id>
-  <Version>1.1.1.0</Version>
+  <Version>1.1.2.0</Version>
   <ProviderName>Mannasoft</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Liquid4All" />
