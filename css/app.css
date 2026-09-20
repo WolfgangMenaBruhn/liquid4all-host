@@ -237,6 +237,20 @@ textarea {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+    align-items: center;
+}
+
+.actions-trailing {
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--surface);
 }
 
 button {
